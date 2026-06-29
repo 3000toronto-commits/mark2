@@ -1,0 +1,524 @@
+<!-- Библиотеки для скачивания PDF. Если они уже подключены на странице, эти две строки можно удалить -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  .fd-return-checklist {
+    --fd-main: #77408C;
+    --fd-light: #EDE0F3;
+    --fd-white: #ffffff;
+    --fd-text: #24182B;
+    --fd-muted: #706177;
+    --fd-border: rgba(119, 64, 140, 0.18);
+    --fd-shadow: 0 12px 30px rgba(69, 35, 84, 0.14);
+
+    box-sizing: border-box;
+    max-width: 920px;
+    margin: 24px auto;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    color: var(--fd-text);
+  }
+
+  .fd-return-checklist *,
+  .fd-return-checklist *::before,
+  .fd-return-checklist *::after {
+    box-sizing: border-box;
+  }
+
+  .fd-return-checklist__inner {
+    background: linear-gradient(135deg, #EDE0F3 0%, #F9F4FC 100%);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: var(--fd-shadow);
+    border: 1px solid rgba(119, 64, 140, 0.12);
+  }
+
+  .fd-return-checklist__pdf-area {
+    background: linear-gradient(135deg, #EDE0F3 0%, #F9F4FC 100%);
+    border-radius: 18px;
+  }
+
+  .fd-return-checklist__header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .fd-return-checklist__label {
+    display: inline-flex;
+    margin-bottom: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(119, 64, 140, 0.1);
+    color: var(--fd-main);
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .fd-return-checklist__title {
+    margin: 0;
+    color: var(--fd-main);
+    font-size: 28px;
+    line-height: 1.12;
+    font-weight: 850;
+    letter-spacing: -0.03em;
+  }
+
+  .fd-return-checklist__subtitle {
+    margin: 6px 0 0;
+    color: var(--fd-muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .fd-return-checklist__progress {
+    min-width: 116px;
+    padding: 10px 14px;
+    background: var(--fd-white);
+    border: 1px solid var(--fd-border);
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 6px 16px rgba(69, 35, 84, 0.07);
+  }
+
+  .fd-return-checklist__progress-label {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--fd-muted);
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .fd-return-checklist__progress-count {
+    display: block;
+    color: var(--fd-main);
+    font-size: 22px;
+    line-height: 1.05;
+    font-weight: 850;
+  }
+
+  .fd-return-checklist__tabs {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .fd-return-checklist__tab {
+    appearance: none;
+    border: 1px solid var(--fd-main);
+    background: var(--fd-main);
+    color: var(--fd-white);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .fd-return-checklist__panel {
+    display: none;
+  }
+
+  .fd-return-checklist__panel--active {
+    display: block;
+  }
+
+  .fd-return-checklist__card {
+    background: var(--fd-white);
+    border-radius: 18px;
+    padding: 16px;
+    border: 1px solid var(--fd-border);
+    box-shadow: 0 8px 20px rgba(69, 35, 84, 0.07);
+  }
+
+  .fd-return-checklist__card-title {
+    margin: 0 0 10px;
+    color: var(--fd-text);
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 850;
+  }
+
+  .fd-return-checklist__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .fd-return-checklist__item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 48px;
+    margin: 0;
+    padding: 11px 12px;
+    background: #FBF8FD;
+    border: 1px solid rgba(119, 64, 140, 0.13);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+
+  .fd-return-checklist__item:hover {
+    background: #F5EDF9;
+    border-color: rgba(119, 64, 140, 0.32);
+  }
+
+  .fd-return-checklist__checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .fd-return-checklist__box {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border: 2px solid var(--fd-main);
+    border-radius: 7px;
+    background: var(--fd-white);
+    position: relative;
+  }
+
+  .fd-return-checklist__checkbox:checked + .fd-return-checklist__box {
+    background: var(--fd-main);
+    border-color: var(--fd-main);
+  }
+
+  .fd-return-checklist__checkbox:checked + .fd-return-checklist__box::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 7px;
+    height: 12px;
+    border: solid var(--fd-white);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .fd-return-checklist__checkbox:focus-visible + .fd-return-checklist__box {
+    outline: 3px solid rgba(119, 64, 140, 0.22);
+    outline-offset: 2px;
+  }
+
+  .fd-return-checklist__text {
+    display: block;
+    color: var(--fd-text);
+    font-size: 14px;
+    line-height: 1.32;
+    font-weight: 550;
+  }
+
+  .fd-return-checklist__checkbox:checked ~ .fd-return-checklist__text {
+    color: var(--fd-muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(119, 64, 140, 0.55);
+  }
+
+  .fd-return-checklist__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .fd-return-checklist__button {
+    appearance: none;
+    border-radius: 13px;
+    padding: 11px 16px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.2;
+    font-weight: 850;
+    cursor: pointer;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .fd-return-checklist__button:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+  }
+
+  .fd-return-checklist__button--primary {
+    border: 1px solid var(--fd-main);
+    background: var(--fd-main);
+    color: var(--fd-white);
+    box-shadow: 0 8px 18px rgba(119, 64, 140, 0.22);
+  }
+
+  .fd-return-checklist__button--secondary {
+    border: 1px solid rgba(119, 64, 140, 0.3);
+    background: var(--fd-white);
+    color: var(--fd-main);
+  }
+
+  @media (max-width: 700px) {
+    .fd-return-checklist {
+      margin: 20px 0;
+    }
+
+    .fd-return-checklist__inner {
+      padding: 16px;
+      border-radius: 20px;
+    }
+
+    .fd-return-checklist__header {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .fd-return-checklist__title {
+      font-size: 24px;
+    }
+
+    .fd-return-checklist__progress {
+      width: 100%;
+    }
+
+    .fd-return-checklist__list {
+      grid-template-columns: 1fr;
+    }
+
+    .fd-return-checklist__actions {
+      flex-direction: column;
+    }
+
+    .fd-return-checklist__button {
+      width: 100%;
+    }
+  }
+
+  @media print {
+    .fd-return-checklist {
+      max-width: none;
+      margin: 0;
+      box-shadow: none;
+    }
+
+    .fd-return-checklist__inner {
+      box-shadow: none;
+      background: #ffffff;
+      border: none;
+    }
+
+    .fd-return-checklist__tabs,
+    .fd-return-checklist__actions {
+      display: none;
+    }
+
+    .fd-return-checklist__card {
+      box-shadow: none;
+    }
+  }
+</style>
+
+<section class="fd-return-checklist" data-fd-return-checklist>
+  <div class="fd-return-checklist__inner">
+    <div class="fd-return-checklist__pdf-area" data-fd-pdf-area>
+      <div class="fd-return-checklist__header">
+        <div>
+          <div class="fd-return-checklist__label">Интерактивный чек-лист</div>
+          <h2 class="fd-return-checklist__title">Что прописать в регламенте возвратов</h2>
+          <p class="fd-return-checklist__subtitle">
+            Отметьте пункты, которые уже закрепили в регламенте.
+          </p>
+        </div>
+
+        <div class="fd-return-checklist__progress" aria-live="polite">
+          <span class="fd-return-checklist__progress-label">Выполнено</span>
+          <span class="fd-return-checklist__progress-count">
+            <span class="fd-return-checklist__done">0</span> из <span class="fd-return-checklist__total">7</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="fd-return-checklist__tabs" role="tablist" aria-label="Разделы чек-листа">
+        <button
+          class="fd-return-checklist__tab fd-return-checklist__tab--active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="fd-return-checklist-panel-returns"
+          id="fd-return-checklist-tab-returns"
+          data-fd-tab="returns"
+        >
+          Регламент возвратов
+        </button>
+      </div>
+
+      <div
+        class="fd-return-checklist__panel fd-return-checklist__panel--active"
+        role="tabpanel"
+        id="fd-return-checklist-panel-returns"
+        aria-labelledby="fd-return-checklist-tab-returns"
+        data-fd-panel="returns"
+      >
+        <div class="fd-return-checklist__card">
+          <h3 class="fd-return-checklist__card-title">Что проверить</h3>
+
+          <div class="fd-return-checklist__list">
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Кто принимает возвращенный товар.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Кто проверяет считываемость кода.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Кто определяет, можно ли товар повторно продавать.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Кто оформляет документы в учетной системе.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Что делать, если код поврежден, стерся или не считывается.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Когда требуется перемаркировка.</span>
+            </label>
+
+            <label class="fd-return-checklist__item">
+              <input class="fd-return-checklist__checkbox" type="checkbox">
+              <span class="fd-return-checklist__box" aria-hidden="true"></span>
+              <span class="fd-return-checklist__text">Кто проверяет итоговый статус товара и кода.</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fd-return-checklist__actions">
+      <button class="fd-return-checklist__button fd-return-checklist__button--secondary" type="button" data-fd-reset>
+        Сбросить
+      </button>
+      <button class="fd-return-checklist__button fd-return-checklist__button--primary" type="button" data-fd-download>
+        Скачать PDF
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const blocks = document.querySelectorAll('[data-fd-return-checklist]');
+    if (!blocks.length) return;
+
+    blocks.forEach(function (block) {
+      const tabs = block.querySelectorAll('[data-fd-tab]');
+      const panels = block.querySelectorAll('[data-fd-panel]');
+      const checkboxes = block.querySelectorAll('.fd-return-checklist__checkbox');
+      const doneNode = block.querySelector('.fd-return-checklist__done');
+      const totalNode = block.querySelector('.fd-return-checklist__total');
+      const resetButton = block.querySelector('[data-fd-reset]');
+      const downloadButton = block.querySelector('[data-fd-download]');
+      const pdfArea = block.querySelector('[data-fd-pdf-area]');
+
+      function updateProgress() {
+        const total = checkboxes.length;
+        const done = Array.from(checkboxes).filter(function (checkbox) {
+          return checkbox.checked;
+        }).length;
+
+        if (doneNode) doneNode.textContent = done;
+        if (totalNode) totalNode.textContent = total;
+      }
+
+      function activateTab(tabName) {
+        tabs.forEach(function (tab) {
+          const isActive = tab.dataset.fdTab === tabName;
+          tab.classList.toggle('fd-return-checklist__tab--active', isActive);
+          tab.setAttribute('aria-selected', String(isActive));
+        });
+
+        panels.forEach(function (panel) {
+          const isActive = panel.dataset.fdPanel === tabName;
+          panel.classList.toggle('fd-return-checklist__panel--active', isActive);
+        });
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          activateTab(tab.dataset.fdTab);
+        });
+      });
+
+      checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', updateProgress);
+      });
+
+      if (resetButton) {
+        resetButton.addEventListener('click', function () {
+          checkboxes.forEach(function (checkbox) {
+            checkbox.checked = false;
+          });
+          updateProgress();
+        });
+      }
+
+      if (downloadButton) {
+        downloadButton.addEventListener('click', function () {
+          if (window.html2canvas && window.jspdf && window.jspdf.jsPDF && pdfArea) {
+            html2canvas(pdfArea, {
+              scale: 2,
+              backgroundColor: '#ffffff'
+            }).then(function (canvas) {
+              const imgData = canvas.toDataURL('image/png');
+              const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+
+              const pageWidth = pdf.internal.pageSize.getWidth();
+              const pageHeight = pdf.internal.pageSize.getHeight();
+              const margin = 10;
+              const imgWidth = pageWidth - margin * 2;
+              const imgHeight = canvas.height * imgWidth / canvas.width;
+
+              let heightLeft = imgHeight;
+              let position = margin;
+
+              pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight - margin * 2;
+
+              while (heightLeft > 0) {
+                pdf.addPage();
+                position = heightLeft - imgHeight + margin;
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight - margin * 2;
+              }
+
+              pdf.save('checklist-reglament-vozvratov.pdf');
+            });
+          } else {
+            window.print();
+          }
+        });
+      }
+
+      updateProgress();
+    });
+  })();
+</script>
